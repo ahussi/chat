@@ -262,7 +262,7 @@ func (e *PromExporter) Collect(ch chan<- prometheus.Metric) {
 	ch <- prometheus.MustNewConstMetric(e.up, prometheus.GaugeValue, up)
 }
 
-func (e *PromExporter) parseStats(ch chan<- prometheus.Metric, stats map[string]interface{}) error {
+func (e *PromExporter) parseStats(ch chan<- prometheus.Metric, stats map[string]any) error {
 	err := firstError(
 		e.parseAndUpdate(ch, e.version, prometheus.GaugeValue, stats, "Version"),
 		e.parseAndUpdate(ch, e.topicsLive, prometheus.GaugeValue, stats, "LiveTopics"),
@@ -301,7 +301,7 @@ func (e *PromExporter) parseStats(ch chan<- prometheus.Metric, stats map[string]
 }
 
 func (e *PromExporter) parseAndUpdate(ch chan<- prometheus.Metric, desc *prometheus.Desc, valueType prometheus.ValueType,
-	stats map[string]interface{}, key string) error {
+	stats map[string]any, key string) error {
 	v, err := parseNumeric(stats, key)
 	if err != nil {
 		return err
@@ -311,7 +311,7 @@ func (e *PromExporter) parseAndUpdate(ch chan<- prometheus.Metric, desc *prometh
 }
 
 func (e *PromExporter) parseAndUpdateHisto(ch chan<- prometheus.Metric, desc *prometheus.Desc,
-	stats map[string]interface{}, key string) error {
+	stats map[string]any, key string) error {
 	h, err := parseHisto(stats, key)
 	if err != nil {
 		return err

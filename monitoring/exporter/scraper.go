@@ -30,7 +30,7 @@ var errMalformed = errors.New("input malformed")
 
 // CollectRaw gathers all metrics from the configured Tinode instance,
 // and returns them as a map.
-func (s *Scraper) CollectRaw() (map[string]interface{}, error) {
+func (s *Scraper) CollectRaw() (map[string]any, error) {
 	stats, err := s.Scrape()
 	if err != nil {
 		log.Println("Failed to fetch or parse response", err)
@@ -45,7 +45,7 @@ func (s *Scraper) CollectRaw() (map[string]interface{}, error) {
 }
 
 // Scrape fetches the data from Tinode server using HTTP GET then decodes the response.
-func (s *Scraper) Scrape() (map[string]interface{}, error) {
+func (s *Scraper) Scrape() (map[string]any, error) {
 	resp, err := http.Get(s.address)
 	if err != nil {
 		log.Println("Failed to connect to server", err)
@@ -53,13 +53,13 @@ func (s *Scraper) Scrape() (map[string]interface{}, error) {
 	}
 	defer resp.Body.Close()
 
-	var stats map[string]interface{}
+	var stats map[string]any
 	err = json.NewDecoder(resp.Body).Decode(&stats)
 	return stats, err
 }
 
-func (s *Scraper) parseStatsRaw(stats map[string]interface{}) (map[string]interface{}, error) {
-	metrics := make(map[string]interface{})
+func (s *Scraper) parseStatsRaw(stats map[string]any) (map[string]any, error) {
+	metrics := make(map[string]any)
 	for _, key := range s.simpleMetrics {
 		if val, err := parseNumeric(stats, key); err == nil {
 			metrics[key] = val
@@ -80,7 +80,7 @@ func (s *Scraper) parseStatsRaw(stats map[string]interface{}) (map[string]interf
 // Extracts a simple histogram from `stats` and returns a cumulative histogram
 // corresponding to the simple histogram.
 // Returns: (count, sum, buckets, error) tuple.
-func parseHisto(stats map[string]interface{}, key string) (*histogram, error) {
+func parseHisto(stats map[string]any, key string) (*histogram, error) {
 	// Histogram is presented as a json with the predefined fields: count, sum, count_per_bucket, bounds.
 	count, err := parseNumeric(stats, key+".count")
 	if err != nil {
@@ -112,12 +112,12 @@ func parseHisto(stats map[string]interface{}, key string) (*histogram, error) {
 }
 
 // Extracts a list of numerics from `stats` for the given path.
-func parseList(stats map[string]interface{}, path string) ([]float64, error) {
+func parseList(stats map[string]any, path string) ([]float64, error) {
 	value, err := parseMetric(stats, path)
 	if err != nil {
 		return nil, err
 	}
-	listval, ok := value.([]interface{})
+	listval, ok := value.([]any)
 	if !ok {
 		log.Println("Value at path is not a float64 array:", path, value)
 		return nil, errMalformed
@@ -130,7 +130,7 @@ func parseList(stats map[string]interface{}, path string) ([]float64, error) {
 }
 
 // Extracts a numeric from `stats` for the given path.
-func parseNumeric(stats map[string]interface{}, path string) (float64, error) {
+func parseNumeric(stats map[string]any, path string) (float64, error) {
 	value, err := parseMetric(stats, path)
 	if err != nil {
 		return 0, err
@@ -144,13 +144,13 @@ func parseNumeric(stats map[string]interface{}, path string) (float64, error) {
 }
 
 // Extracts a metric from `stats` for the given path.
-func parseMetric(stats map[string]interface{}, path string) (interface{}, error) {
+func parseMetric(stats map[string]any, path string) (any, error) {
 	parts := strings.Split(path, ".")
-	var value interface{}
+	var value any
 	var found bool
 	value = stats
-	for i := 0; i < len(parts); i++ {
-		subset, ok := value.(map[string]interface{})
+	for i := range parts {
+		subset, ok := value.(map[string]any)
 		if !ok {
 			log.Println("Invalid key path:", path)
 			return 0, errKeyNotFound
