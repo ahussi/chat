@@ -447,7 +447,7 @@ func (t *Topic) handleMetaSet(msg *ClientComMessage, asUid types.Uid, asChan boo
 		}
 	}
 	if msg.MetaWhat&constMsgMetaReact != 0 {
-		if err := t.replySetReact(msg.sess, asUid, asChan, msg); err != nil {
+		if err := t.replySetReact(msg.sess, asUid, msg); err != nil {
 			logs.Warn.Printf("topic[%s] meta.Set.React failed: %v", t.name, err)
 		}
 	}
@@ -3143,6 +3143,26 @@ func (t *Topic) replySetAux(sess *Session, asUid types.Uid, msg *ClientComMessag
 	}
 
 	if aux, changed := mergeMaps(copyMap(t.aux), msg.Set.Aux); changed {
+		if reacts, ok := aux["react"]; ok {
+			if vals, ok := reacts.([]string); ok {
+				// Check for spacial []string{nullValue} which means "reactions are not allowed".
+				// It's needed to distinguish between "no allowed reactions defined" and "reactions are not allowed".
+				if len(vals) > 1 || (len(vals) == 1 && vals[0] != nullValue) {
+					// Check if the new value of "react" is valid.
+					for _, r := range vals {
+						if !isReactionAllowed(r) {
+							sess.queueOut(ErrMalformedReply(msg, now))
+							return errors.New("invalid reaction value in aux")
+						}
+					}
+				}
+			} else {
+				// Reactions is non-nil but of invalid type.
+				sess.queueOut(ErrMalformedReply(msg, now))
+				return errors.New("invalid type of 'react' field in aux")
+			}
+		}
+
 		err := store.Topics.Update(t.name, map[string]any{"Aux": aux, "UpdatedAt": now})
 		if err == nil {
 			t.aux = aux
@@ -3217,7 +3237,7 @@ func (t *Topic) replyGetReact(sess *Session, asUid types.Uid, req *MsgGetOpts, m
 	return nil
 }
 
-func (t *Topic) replySetReact(sess *Session, asUid types.Uid, asChan bool, msg *ClientComMessage) error {
+func (t *Topic) replySetReact(sess *Session, asUid types.Uid, msg *ClientComMessage) error {
 	now := types.TimeNow()
 	react := msg.Set.React
 
@@ -3230,15 +3250,13 @@ func (t *Topic) replySetReact(sess *Session, asUid types.Uid, asChan bool, msg *
 	} else {
 		if t.aux != nil {
 			// Check against topic-specific allowed reactions.
-			if config, ok := t.aux["react"].(map[string]any); ok {
-				if vals, ok := config["vals"].([]string); ok {
-					if ok := slices.Contains(vals, react.Value); !ok {
-						err = types.ErrMalformed
-					}
-				} else {
-					// No allowed values defined.
-					err = types.ErrUnsupported
+			if vals, ok := t.aux["react"].([]string); ok {
+				if ok := slices.Contains(vals, react.Value); !ok {
+					err = types.ErrMalformed
 				}
+			} else {
+				// No allowed values defined.
+				err = types.ErrPermissionDenied
 			}
 		}
 

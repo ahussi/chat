@@ -109,9 +109,6 @@ const (
 
 	// Default timeout to drop an unanswered call, seconds.
 	defaultCallEstablishmentTimeout = 30
-
-	// Default maximum number of reaction types per message.
-	defaultMaxReactions = 4
 )
 
 // Build version number defined by the compiler:
@@ -222,8 +219,6 @@ var globals struct {
 	allowedReactions map[string]bool
 	// The same reactions as a priority-sorted list.
 	reactions []string
-	// Maximum number of reaction types per message.
-	maxReactions int
 }
 
 // Credential validator config.
@@ -330,9 +325,6 @@ type configType struct {
 
 	// AllowedReactions restricts reaction content that clients may use.
 	AllowedReactions []string `json:"allowed_reactions,omitempty"`
-	// Maximum number of reaction types per message, i.e. the number of different emojis that
-	// can be used in reactions to a single message. At least 1, not more than 8.
-	MaxReactions int `json:"max_reactions,omitempty"`
 
 	// Configs for subsystems
 	Cluster   json.RawMessage             `json:"cluster_config"`
@@ -611,10 +603,6 @@ func main() {
 		if len(reactions) > 0 {
 			globals.reactions = reactions
 			logs.Info.Println("Number of allowed reactions:", len(globals.reactions))
-			globals.maxReactions = config.MaxReactions
-			if globals.maxReactions <= 0 || globals.maxReactions > defaultMaxReactions*2 {
-				globals.maxReactions = defaultMaxReactions
-			}
 		}
 	}
 

@@ -777,7 +777,6 @@ func (s *Session) hello(msg *ClientComMessage) {
 		}
 		if len(globals.allowedReactions) > 0 {
 			params["reactions"] = globals.reactions
-			params["maxReactions"] = globals.maxReactions
 		}
 		if len(globals.iceServers) > 0 {
 			params["iceServers"] = globals.iceServers

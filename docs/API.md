@@ -474,7 +474,7 @@ An empty `ua=""` _user agent_ is not reported. I.e. if user attaches to `me` wit
 Topics have `trusted`, `public`, `aux` fields, subscriptions have `private` fields. The primary difference between these fields is in access control:
 
  * `trusted`: writable by `ROOT` users, readable by anyone.
- * `public`: writable by the `owner` or the user, readable by anyone.
+ * `public`: writable by the `owner` (`grp` topics) or the user (`me` topic shared to `p2p` topics), readable by anyone.
  * `aux`: writable by topic administrators, readable by subscribers.
  * `private`: readable and writable only by the user who created the subscription.
 
@@ -496,7 +496,7 @@ trusted: {
 
 ### Public
 
-The format of the `public` field in group, peer to peer, systems topics is expected to be [theCard](./thecard.md). The field is writable by by the user for users, the topic owner for topics. The field is readable by anyone who has access to topic or user.
+The format of the `public` field in group, peer to peer, systems topics is expected to be [theCard](./thecard.md). The field is writable by by the user for users, the topic owner for group topics. The field is readable by anyone who has access to topic or user.
 
 The `fnd` topic expects `public` to be a string representing a [search query](#query-language)).
 
@@ -524,13 +524,9 @@ The format of the `aux` field is a set of key-value pairs. The `aux` is writable
 ```js
 aux: {
   pins: [1001, 23456], // array of integer message IDs to pin to the top of the message list.
-  react: {  // topic-specific settings for reactions in group topics;
-            // if unset then server-defaults will be used.
-    vals: [ // list of strings allowed to be used as topic reaction types.
-      "👍", "❤️", "🔥", "🤣"
-    ],
-    max: 3  // maximum number of different reaction types per message.
-  }
+  react: [ // list of strings allowed to be used as topic reaction types.
+    "👍", "❤️", "🔥", "🤣"
+  ]
 }
 ```
 
@@ -1190,7 +1186,7 @@ The following actions types `what` are currently defined:
  * `kpuv`: a video is being uploaded.
  * `read`: a `{data}` message is seen (read) by the user. It implies `recv` as well.
  * `recv`: a `{data}` message is received by the client software but may not yet seen by user.
- * `pm`: partial message update for progressively generated messages, such as chats with generative AI.
+ * `pm`: partial message update for progressively generated messages, such as chats with generative AI (LLMs).
  * `stp`: request to stop progressive message updates.
 
 The `read` and `recv` notifications may optionally include `unread` value which is the total count of unread messages as determined by this client. The per-user `unread` count is maintained by the server: it's incremented when new `{data}` messages are sent to user and reset to the values reported by the `{note unread=...}` message. The `unread` value is never decremented by the server. The value is included in push notifications to be shown on a badge on iOS:
