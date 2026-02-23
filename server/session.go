@@ -814,8 +814,11 @@ func (s *Session) hello(msg *ClientComMessage) {
 		if !s.uid.IsZero() {
 			var err error
 			if msg.Hi.DeviceID == types.NullValue {
+				// User wants to delete device ID.
 				deviceIDUpdate = true
-				err = store.Devices.Delete(s.uid, s.deviceID)
+				if s.deviceID != "" {
+					err = store.Devices.Delete(s.uid, s.deviceID)
+				}
 			} else if msg.Hi.DeviceID != "" && s.deviceID != msg.Hi.DeviceID {
 				deviceIDUpdate = true
 				err = store.Devices.Update(s.uid, s.deviceID, &types.DeviceDef{
@@ -830,7 +833,7 @@ func (s *Session) hello(msg *ClientComMessage) {
 
 			if err != nil {
 				logs.Warn.Println("s.hello:", "device ID", err, s.sid)
-				s.queueOut(ErrUnknown(msg.Id, "", msg.Timestamp))
+				s.queueOut(decodeStoreError(err, msg.Id, msg.Timestamp, nil))
 				return
 			}
 		}
