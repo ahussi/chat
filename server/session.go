@@ -832,10 +832,17 @@ func (s *Session) hello(msg *ClientComMessage) {
 			}
 
 			if err != nil {
-				logs.Warn.Println("s.hello:", "device ID", err, s.sid)
 				s.queueOut(decodeStoreError(err, msg.Id, msg.Timestamp, nil))
+				logs.Warn.Println("s.hello:", "device ID", err, s.sid)
 				return
 			}
+		} else {
+			// Session is not authenticated, report an error. Otherwise,
+			// the client may think that the device ID was updated successfully,
+			// but it will not be saved in the database.
+			s.queueOut(ErrAuthRequiredReply(msg, msg.Timestamp))
+			logs.Warn.Println("s.hello:", "device ID update requires authentication", s.sid)
+			return
 		}
 	} else {
 		// Version cannot be changed mid-session.

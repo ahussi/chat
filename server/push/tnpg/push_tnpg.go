@@ -153,7 +153,7 @@ func postMessage(endpoint string, body any, config *configType) (*pushtype.Batch
 
 	if err != nil {
 		// Just log the error, but don't report it to caller. The push succeeded.
-		logs.Warn.Println("tnpg failed to decode respons:", err)
+		logs.Warn.Println("tnpg failed to decode response:", err)
 	}
 
 	batch.HttpCode = resp.StatusCode
