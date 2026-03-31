@@ -48,6 +48,7 @@ import (
 	_ "github.com/tinode/chat/server/push/stdout"
 	_ "github.com/tinode/chat/server/push/tnpg"
 
+	"github.com/tinode/chat/server/media"
 	"github.com/tinode/chat/server/store"
 
 	// Credential validators
@@ -219,6 +220,11 @@ var globals struct {
 	allowedReactions map[string]bool
 	// The same reactions as a priority-sorted list.
 	reactions []string
+
+	// allowedOrigins is the list of HTTP Origins permitted for WebSocket and long-poll
+	// connections. Supports exact matches and wildcards (e.g. https://*.example.com).
+	// An empty slice means all origins are allowed (backward-compatible default).
+	allowedOrigins []media.AllowedOrigin
 }
 
 // Credential validator config.
@@ -325,6 +331,10 @@ type configType struct {
 
 	// AllowedReactions restricts reaction content that clients may use.
 	AllowedReactions []string `json:"allowed_reactions,omitempty"`
+
+	// AllowedOrigins is the list of HTTP Origins permitted for WebSocket and long-poll
+	// connections. An empty list allows all origins (default, backward compatible).
+	AllowedOrigins []string `json:"allowed_origins,omitempty"`
 
 	// Configs for subsystems
 	Cluster   json.RawMessage             `json:"cluster_config"`
@@ -604,6 +614,16 @@ func main() {
 			globals.reactions = reactions
 			logs.Info.Println("Number of allowed reactions:", len(globals.reactions))
 		}
+	}
+
+	// Allowed origins for WebSocket and long-poll connections.
+	if len(config.AllowedOrigins) > 0 {
+		var err error
+		globals.allowedOrigins, err = media.ParseCORSAllow(config.AllowedOrigins)
+		if err != nil {
+			logs.Err.Fatal("Invalid allowed_origins:", err)
+		}
+		logs.Info.Println("Allowed origins:", config.AllowedOrigins)
 	}
 
 	// Maximum number of group topic subscribers

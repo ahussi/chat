@@ -211,6 +211,11 @@ func (v *validator) Init(jsonconf string) error {
 		v.SMTPPort = defaultPort
 	}
 
+	if v.TLSInsecureSkipVerify {
+		logs.Warn.Println("email validator: TLS certificate verification is DISABLED " +
+			"(insecure_skip_verify=true). Do not use in production.")
+	}
+
 	return nil
 }
 

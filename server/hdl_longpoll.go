@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/tinode/chat/server/logs"
+	"github.com/tinode/chat/server/media"
 )
 
 func (sess *Session) sendMessageLp(wrt http.ResponseWriter, msg any) bool {
@@ -138,9 +139,16 @@ func serveLongPoll(wrt http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	// TODO(gene): should it be configurable?
-	// Currently any domain is allowed to get data from the chat server
-	wrt.Header().Set("Access-Control-Allow-Origin", "*")
+	// Set CORS header. If an origin allowlist is configured, echo the request
+	// origin back only when it is permitted; otherwise allow all origins.
+	if origin := req.Header.Get("Origin"); origin != "" {
+		if media.IsOriginAllowed(globals.allowedOrigins, origin) {
+			wrt.Header().Set("Access-Control-Allow-Origin", origin)
+			wrt.Header().Set("Vary", "Origin")
+		}
+	} else {
+		// No Origin header: non-browser client, no CORS header needed.
+	}
 
 	// Ensure the response is not cached
 	if req.ProtoAtLeast(1, 1) {

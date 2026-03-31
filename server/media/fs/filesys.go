@@ -27,6 +27,10 @@ const (
 	defaultCacheControl = "max-age=86400"
 
 	handlerName = "fs"
+
+	// uploadDirMode is the permission bits for the upload directory.
+	// Owner: rwx, Group: r-x, Other: --- (no world access).
+	uploadDirMode = 0750
 )
 
 type fileConfig struct {
@@ -67,7 +71,7 @@ func (fh *fshandler) Init(jsconf string) error {
 		return errors.New("failed to parse CORS allowed origins: " + err.Error())
 	}
 	// Make sure the upload directory exists.
-	return os.MkdirAll(fh.FileUploadDirectory, 0777)
+	return os.MkdirAll(fh.FileUploadDirectory, uploadDirMode)
 }
 
 // Headers is used for cache management and serving CORS headers.

@@ -52,6 +52,19 @@ type AllowedOrigin struct {
 	HasWildcard bool
 }
 
+// IsOriginAllowed reports whether origin is permitted by the given allowlist.
+// An empty allowlist means all origins are allowed.
+// A missing Origin header (empty string) is always allowed (non-browser client).
+func IsOriginAllowed(allowed []AllowedOrigin, origin string) bool {
+	if origin == "" {
+		return true
+	}
+	if len(allowed) == 0 {
+		return true
+	}
+	return matchCORSOrigin(allowed, origin) != ""
+}
+
 var fileNamePattern = regexp.MustCompile(`^[-_A-Za-z0-9]+`)
 
 // GetIdFromUrl is a helper method for extracting file ID from a URL.

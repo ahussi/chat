@@ -510,10 +510,18 @@ func (*grpcNodeServer) LargeFileReceive(stream pbx.Node_LargeFileReceiveServer) 
 	}
 
 	mimeType := http.DetectContentType(req.Content)
-	// If DetectContentType fails, use client-provided content type.
+	// If DetectContentType fails, see if client-provided content type can be used.
 	if mimeType == "application/octet-stream" {
-		if contentType := req.Meta.GetMimeType(); contentType != "" {
-			mimeType = contentType
+		if userContentType, params, err := mime.ParseMediaType(req.Meta.GetMimeType()); err == nil {
+			// Make sure the content-type is on the whitelist.
+			for _, allowed := range allowedMimeTypes {
+				if strings.HasPrefix(userContentType, allowed) {
+					if userContentType = mime.FormatMediaType(userContentType, params); userContentType != "" {
+						mimeType = userContentType
+					}
+					break
+				}
+			}
 		}
 	}
 

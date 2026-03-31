@@ -20,7 +20,7 @@ const (
 	defaultMinLoginLength = 2
 	defaultMaxLoginLength = 32
 
-	defaultMinPasswordLength = 3
+	defaultMinPasswordLength = 6
 )
 
 // Token suitable as a login: starts and ends with a Unicode letter (class L) or number (class N),
