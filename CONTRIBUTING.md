@@ -20,6 +20,10 @@ We very much appreciate your wanting to contribute to Tinode Chat, but we need t
 
 - Django's [CLA FAQ](https://www.djangoproject.com/foundation/cla/faq/)
 - A [chapter](http://producingoss.com/en/copyright-assignment.html) from Karl Fogel's _Producing Open Source Software_ on CLAs
-- The [Wikipedia article on CLAs](http://en.wikipedia.org/wiki/Contributor_license_agreement)
+- The [Wikipedia article on CLAs](https://en.wikipedia.org/wiki/Contributor_license_agreement)
 
 This is part of the legal framework of the open-source ecosystem that adds some red tape, but protects both the contributor and the company / foundation behind the project. It also gives us the option to relicense the code with a more permissive license in the future.
+
+---
+
+> **Personal fork note:** This is my personal fork for learning and experimentation. I am not actively accepting pull requests here — please direct contributions to the [upstream repository](https://github.com/tinode/chat).
