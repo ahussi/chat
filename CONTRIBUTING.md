@@ -27,3 +27,5 @@ This is part of the legal framework of the open-source ecosystem that adds some 
 ---
 
 > **Personal fork note:** This is my personal fork for learning and experimentation. I am not actively accepting pull requests here — please direct contributions to the [upstream repository](https://github.com/tinode/chat).
+>
+> **Local setup reminder:** After cloning, copy `tinode.conf` to `tinode.conf.local` and adjust settings there. The `.local` file is gitignored and won't be accidentally committed.
